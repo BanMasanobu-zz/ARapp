@@ -23,16 +23,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
         
-        sceneView.debugOptions = [.showWorldOrigin]
-        let scene = SCNScene()
-        sceneView.scene = scene
-        let earth = SCNSphere(radius: 0.2)
-        earth.firstMaterial?.diffuse.contents = UIImage(named: "rails")
-        let earthNode = SCNNode(geometry: earth)
-        let action = SCNAction.rotateBy(x: 0, y: .pi*2, z: 0, duration: 10)
-        earthNode.runAction(SCNAction.repeatForever(action))
-        earthNode.position = SCNVector3(0.2, 0.3, -0.2)
-        sceneView.scene.rootNode.addChildNode(earthNode)
+        sceneView.scene = SCNScene()
+        sceneView.debugOptions = .showWireframe
+       
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -40,6 +33,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Create a session configuration
         let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = [.horizontal, .vertical]
 
         // Run the view's session
         sceneView.session.run(configuration)
@@ -76,5 +70,20 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func sessionInterruptionEnded(_ session: ARSession) {
         // Reset tracking and/or remove existing anchors if consistent tracking is required
         
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
+        node.addChildNode(PlaneNode(anchor: planeAnchor))
+    }
+    
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+        guard let planeAnchor = anchor as? ARPlaneAnchor else {
+            return
+        }
+        guard let planeNode = node.childNodes.first as? PlaneNode else {
+            return
+        }
+        planeNode.update(anchor: planeAnchor)
     }
 }
