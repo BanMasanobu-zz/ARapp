@@ -27,7 +27,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let scene = SCNScene()
         sceneView.scene = scene
         let earth = SCNSphere(radius: 0.2)
-        earth.firstMaterial?.diffuse.contents = UIImage(named: "earth_1024")
+        earth.firstMaterial?.diffuse.contents = UIImage(named: "rails")
         let earthNode = SCNNode(geometry: earth)
         let action = SCNAction.rotateBy(x: 0, y: .pi*2, z: 0, duration: 10)
         earthNode.runAction(SCNAction.repeatForever(action))
