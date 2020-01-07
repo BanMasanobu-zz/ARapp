@@ -13,6 +13,7 @@ import ARKit
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
+    var nodes: Array<SCNNode>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,8 +25,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.showsStatistics = true
         
         sceneView.scene = SCNScene()
-        sceneView.debugOptions = .showWireframe
-       
+        sceneView.debugOptions = [.showWireframe, .showPhysicsShapes]
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -44,6 +44,26 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Pause the view's session
         sceneView.session.pause()
+    }
+
+    @IBAction func tapSceneView(_ sender: UITapGestureRecognizer) {
+        let tapLoc = sender.location(in: sceneView)
+        let results = sceneView.hitTest(tapLoc, types: .existingPlaneUsingExtent)
+        guard let result = results.first else { return }
+        if let anchor = result.anchor as? ARPlaneAnchor {
+            if anchor.alignment == .vertical {
+                return
+            }
+        }
+        let boxNode = PhysicBoxNode()
+        let earthNode = PhysicEarghNode()
+        nodes = [boxNode, earthNode]
+        let index = Int(arc4random())%(nodes.count)
+        let node = nodes[index]
+        let pos = result.worldTransform.columns.3
+        let y = pos.y + 0.2
+        node.position = SCNVector3(x: pos.x, y: y, z: pos.z)
+        sceneView.scene.rootNode.addChildNode(node)
     }
 
     // MARK: - ARSCNViewDelegate
@@ -74,14 +94,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
         guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
-        node.addChildNode(PlaneNode(anchor: planeAnchor))
+        node.addChildNode(PhysicPlaneNode(anchor: planeAnchor))
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         guard let planeAnchor = anchor as? ARPlaneAnchor else {
             return
         }
-        guard let planeNode = node.childNodes.first as? PlaneNode else {
+        guard let planeNode = node.childNodes.first as? PhysicPlaneNode else {
             return
         }
         planeNode.update(anchor: planeAnchor)
